@@ -36,14 +36,11 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
     {
       // Ignore build artifacts and third-party dependencies to reduce noise.
       ignores: [
-        'node_modules/**',
-        'dist/**',
-        'coverage/**',
-        'playwright-report/**',
-        'test-results/**',
-        'openspec/changes/archive/**',
-        '.opencode/**',
-        'codegen/**',
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/coverage/**',
+        '**/playwright-report/**',
+        '**/test-results/**',
       ],
     },
 
@@ -105,10 +102,10 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
         'check-file/filename-naming-convention': [
           'error',
           {
-            'src/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
-            'test/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
-            'tests/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
-            'scripts/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
+            '**/src/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
+            '**/test/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
+            '**/tests/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
+            '**/scripts/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
           },
           { ignoreMiddleExtensions: true },
         ],
@@ -216,7 +213,7 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
 
     // ========== Require JSDoc/TSDoc on src declarations ==========
     {
-      files: ['src/**/*.{js,mjs,cjs,ts,mts,cts}'],
+      files: ['**/src/**/*.{js,mjs,cjs,ts,mts,cts}'],
       rules: {
         'jsdoc/require-jsdoc': [
           'warn',
@@ -261,8 +258,8 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
       // One-off utilities and debug tools, not production code paths.
       // Core safety rules (types, async, imports) still apply.
       files: [
-        'scripts/**/*.{js,mjs,cjs,ts,mts,cts}',
-        'src/scripts/**/*.{js,mjs,cjs,ts,mts,cts}',
+        '**/scripts/**/*.{js,mjs,cjs,ts,mts,cts}',
+        '**/src/scripts/**/*.{js,mjs,cjs,ts,mts,cts}',
       ],
       rules: {
         'max-lines-per-function': 'off',

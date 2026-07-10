@@ -7,7 +7,7 @@
 // un-ban Date in src.
 
 export default {
-  files: ['src/**/*.{js,mjs,cjs,ts,mts,cts}'],
+  files: ['**/src/**/*.{js,mjs,cjs,ts,mts,cts}'],
   rules: {
     'no-restricted-syntax': [
       'error',

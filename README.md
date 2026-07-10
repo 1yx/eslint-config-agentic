@@ -47,6 +47,10 @@ export default [
 ];
 ```
 
+## Monorepo
+
+Path globs use a `**/` prefix (e.g. `**/src/**`, `**/tests/**`), so the config works identically in a **single-package repo** (`src/foo.ts`) and a **monorepo** (`packages/foo/src/bar.ts`) from one root config. Type-aware rules resolve each file's nearest `tsconfig.json`, so per-package tsconfigs work out of the box.
+
 ## What it enforces
 
 - **Quality limits** (all errors): ≤50 lines/function, ≤500 lines/file, ≤4 nesting levels, ≤3 params, cyclomatic complexity ≤10.

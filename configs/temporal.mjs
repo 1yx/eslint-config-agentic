@@ -7,9 +7,9 @@
 
 export default {
   files: [
-    'src/**/*.{js,mjs,cjs,ts,mts,cts}',
-    'tests/**/*.{js,mjs,cjs,ts,mts,cts}',
-    'scripts/**/*.{js,mjs,cjs,ts,mts,cts}',
+    '**/src/**/*.{js,mjs,cjs,ts,mts,cts}',
+    '**/tests/**/*.{js,mjs,cjs,ts,mts,cts}',
+    '**/scripts/**/*.{js,mjs,cjs,ts,mts,cts}',
   ],
   rules: {
     'no-restricted-syntax': [
