@@ -8,8 +8,8 @@
 // Override the project root (only if eslint isn't run from your repo root):
 //   export default agentic({ tsconfigRootDir: import.meta.dirname });
 //
-// Config blocks are split by concern under src/configs/; custom rule implementations
-// live under src/rules/ (aggregated by src/rules/index.mjs).
+// Config blocks are split by concern under configs/; custom rule implementations
+// live under rules/ (aggregated by rules/index.mjs).
 
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
@@ -17,11 +17,11 @@ import tsdocPlugin from 'eslint-plugin-tsdoc';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
 import checkFile from 'eslint-plugin-check-file';
 import globals from 'globals';
-import agenticRules from './src/rules/index.mjs';
-import temporal from './src/configs/temporal.mjs';
-import qualityLimits from './src/configs/quality-limits.mjs';
-import escapeHatches from './src/configs/escape-hatches.mjs';
-import promiseSafety from './src/configs/promise-safety.mjs';
+import agenticRules from './rules/index.mjs';
+import temporal from './configs/temporal.mjs';
+import qualityLimits from './configs/quality-limits.mjs';
+import escapeHatches from './configs/escape-hatches.mjs';
+import promiseSafety from './configs/promise-safety.mjs';
 
 /**
  * Build the ESLint flat config array.

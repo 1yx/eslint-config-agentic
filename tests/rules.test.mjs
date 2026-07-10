@@ -6,11 +6,11 @@ import test from 'node:test';
 import { RuleTester } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
 
-import noEmptyCatch from '../src/rules/no-empty-catch.mjs';
-import noAsyncArrayCallback from '../src/rules/no-async-array-callback.mjs';
-import noBroadException from '../src/rules/no-broad-exception.mjs';
-import noHardcodedSecret from '../src/rules/no-hardcoded-secret.mjs';
-import globalLiteralConstNaming from '../src/rules/global-literal-const-naming.mjs';
+import noEmptyCatch from '../rules/no-empty-catch.mjs';
+import noAsyncArrayCallback from '../rules/no-async-array-callback.mjs';
+import noBroadException from '../rules/no-broad-exception.mjs';
+import noHardcodedSecret from '../rules/no-hardcoded-secret.mjs';
+import globalLiteralConstNaming from '../rules/global-literal-const-naming.mjs';
 
 const ruleTester = new RuleTester({
   languageOptions: {
