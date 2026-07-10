@@ -46,7 +46,7 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
 
     // ========== Base: parser, plugins, naming, core style, TS strictness, TSDoc ==========
     {
-      files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
+      files: ['**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}'],
 
       languageOptions: {
         ecmaVersion: 'latest',
@@ -61,8 +61,9 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
           tsconfigRootDir,
         },
         globals: {
-          // Pull in the full Node.js global set (process, Buffer, setTimeout, etc.).
+          // Node.js + browser globals for full-stack coverage (process, Buffer, window, document).
           ...globals.node,
+          ...globals.browser,
         },
       },
 
@@ -98,10 +99,11 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
           { selector: 'property', format: null },
         ],
 
-        // Enforce kebab-case filenames in src/test/scripts.
+        // React components (.tsx/.jsx) use PascalCase; other source files use kebab-case.
         'check-file/filename-naming-convention': [
           'error',
           {
+            '**/*.{tsx,jsx}': 'PASCAL_CASE',
             '**/src/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
             '**/test/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
             '**/tests/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
@@ -192,7 +194,7 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
       // Catches patterns typescript-eslint cannot detect structurally: empty catch
       // blocks, `array.map(async ...)` returning Promise[], overly broad catch types,
       // and hardcoded secrets. `no-eval` is ESLint's built-in.
-      files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
+      files: ['**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}'],
       plugins: {
         agentic: agenticRules,
       },
@@ -213,7 +215,7 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
 
     // ========== Require JSDoc/TSDoc on src declarations ==========
     {
-      files: ['**/src/**/*.{js,mjs,cjs,ts,mts,cts}'],
+      files: ['**/src/**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}'],
       rules: {
         'jsdoc/require-jsdoc': [
           'warn',
@@ -258,8 +260,8 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
       // One-off utilities and debug tools, not production code paths.
       // Core safety rules (types, async, imports) still apply.
       files: [
-        '**/scripts/**/*.{js,mjs,cjs,ts,mts,cts}',
-        '**/src/scripts/**/*.{js,mjs,cjs,ts,mts,cts}',
+        '**/scripts/**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}',
+        '**/src/scripts/**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}',
       ],
       rules: {
         'max-lines-per-function': 'off',

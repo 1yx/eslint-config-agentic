@@ -10,7 +10,7 @@
 // | Cyclomatic complexity   | 10    | Beyond 10, test cases multiply combinatorially |
 
 export default {
-  files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
+  files: ['**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}'],
   rules: {
     'max-lines-per-function': ['error', { max: 50, skipBlankLines: true, skipComments: true }],
     'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],

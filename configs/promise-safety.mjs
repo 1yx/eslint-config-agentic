@@ -3,7 +3,7 @@
 // inherited from the base all-files config block in index.mjs.
 
 export default {
-  files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
+  files: ['**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}'],
   rules: {
     // Disallow unhandled floating Promises — the leading cause of silent failures in agents.
     '@typescript-eslint/no-floating-promises': 'error',
