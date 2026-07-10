@@ -39,6 +39,7 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
         '**/node_modules/**',
         '**/dist/**',
         '**/coverage/**',
+        '**/.next/**',
         '**/playwright-report/**',
         '**/test-results/**',
       ],
