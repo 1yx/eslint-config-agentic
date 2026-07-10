@@ -59,8 +59,8 @@ Path globs use a `**/` prefix (e.g. `**/src/**`, `**/tests/**`), so the config w
 - **Async / Promise safety** (errors): no floating promises, no misused promises, no awaiting non-thenables; warn on async-without-await.
 - **Temporal-only dates**: `new Date()`, `Date.now()`, `Date.parse()` are banned in `src/`, `tests/`, `scripts/` — use the Temporal API (shipped natively in Node 26+, Chrome 144, Firefox 139).
 - **No escape hatches in `src/`**: type assertions (`as`) and non-null assertions (`!`) are banned; JSDoc/TSDoc required on declarations.
-- **Naming conventions**: kebab-case filenames for `.ts`/`.js`, PascalCase for `.tsx`/`.jsx` (React); camelCase variables/functions, PascalCase types, UPPER_SNAKE_CASE for global const literals.
-- **React-friendly**: `.tsx`/`.jsx` files are fully linted (not ignored); component filenames use PascalCase; both Node and browser globals are available.
+- **Naming conventions**: kebab-case filenames for `.ts`/`.js`; `.tsx`/`.jsx` follow the directory (`app/` → kebab, `components/` → PascalCase); camelCase variables/functions, PascalCase types, UPPER_SNAKE_CASE for global const literals.
+- **React-friendly**: `.tsx`/`.jsx` files are fully linted (not ignored); both Node and browser globals are available.
 - **Inlined agent guardrails**: empty catch blocks, `array.map(async ...)`, `catch (e: any)`, hardcoded secrets.
 
 ## Inlined agent guardrails
@@ -84,7 +84,7 @@ Plus ESLint's built-in `no-eval` (error) for `eval()` / `new Function()`.
 
 | Convention | Rule |
 |---|---|
-| Filenames: `kebab-case` for `.ts`/`.js`; `PascalCase` for `.tsx`/`.jsx` (React components) | `check-file/filename-naming-convention` |
+| Filenames: `.ts`/`.js` → kebab; `.tsx`/`.jsx` → kebab in `app/`, PascalCase in `components/` | `check-file/filename-naming-convention` |
 | Variables/functions/params: `camelCase` (`_` prefix allowed) | `@typescript-eslint/naming-convention` |
 | Types/classes/interfaces/enums: `PascalCase` | `@typescript-eslint/naming-convention` |
 | Global const with a literal value: `UPPER_SNAKE_CASE` | `agentic/global-literal-const-naming` (inlined) |

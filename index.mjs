@@ -99,11 +99,14 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
           { selector: 'property', format: null },
         ],
 
-        // React components (.tsx/.jsx) use PascalCase; other source files use kebab-case.
+        // .tsx/.jsx naming follows the directory: app/ (Next.js pages/layouts) → kebab,
+        // components/ → PascalCase. No broad **/*.{tsx,jsx} key — check-file is
+        // all-patterns-must-pass, so a broad key would conflict with the app/ rule.
         'check-file/filename-naming-convention': [
           'error',
           {
-            '**/*.{tsx,jsx}': 'PASCAL_CASE',
+            '**/app/**/*.{tsx,jsx}': 'KEBAB_CASE',
+            '**/components/**/*.{tsx,jsx}': 'PASCAL_CASE',
             '**/src/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
             '**/test/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
             '**/tests/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
