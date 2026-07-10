@@ -22,7 +22,6 @@ import temporal from './src/configs/temporal.mjs';
 import qualityLimits from './src/configs/quality-limits.mjs';
 import escapeHatches from './src/configs/escape-hatches.mjs';
 import promiseSafety from './src/configs/promise-safety.mjs';
-import { prettier, prettierDisable } from './src/configs/prettier.mjs';
 
 /**
  * Build the ESLint flat config array.
@@ -191,9 +190,6 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
     // ========== Type-aware Promise safety ==========
     promiseSafety,
 
-    // ========== Prettier as an ESLint rule ==========
-    prettier,
-
     // ========== Agent semantic guardrails (inlined custom rules) ==========
     {
       // Catches patterns typescript-eslint cannot detect structurally: empty catch
@@ -293,8 +289,5 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
         ],
       },
     },
-
-    // ========== Prettier conflict disable (MUST be last) ==========
-    prettierDisable,
   ];
 }

@@ -1,7 +1,7 @@
 {
   "name": "eslint-config-agentic",
   "version": "0.1.0",
-  "description": "Shareable ESLint flat config for AI-generated TypeScript: type safety, Promise safety, Temporal-only dates, inlined agent guardrails, and Prettier.",
+  "description": "Shareable ESLint flat config for AI-generated TypeScript: type safety, Promise safety, Temporal-only dates, and inlined agent guardrails.",
   "type": "module",
   "main": "./index.mjs",
   "exports": {
@@ -22,8 +22,7 @@
     "flat-config",
     "typescript",
     "ai",
-    "agent",
-    "prettier"
+    "agent"
   ],
   "author": "lyx",
   "repository": {
@@ -40,16 +39,13 @@
   },
   "peerDependencies": {
     "eslint": "^9.0.0 || ^10.0.0",
-    "prettier": "^3.0.0",
     "typescript": "^5.0.0"
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^8.57.0",
     "@typescript-eslint/parser": "^8.57.0",
-    "eslint-config-prettier": "^10.1.0",
     "eslint-plugin-check-file": "^3.3.1",
     "eslint-plugin-jsdoc": "^62.0.0",
-    "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-tsdoc": "^0.5.0",
     "globals": "^17.0.0"
   }

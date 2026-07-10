@@ -1,13 +1,13 @@
 # eslint-config-agentic
 
-Shareable ESLint **flat config** tuned for AI-generated TypeScript. One package gives you: type safety, Promise safety, **Temporal-only dates**, **inlined agent semantic guardrails**, and Prettier — all in a single pass.
+Shareable ESLint **flat config** tuned for AI-generated TypeScript. One package gives you: type safety, Promise safety, **Temporal-only dates**, and **inlined agent semantic guardrails** — all in a single pass.
 
 Derived from a production agent codebase. Opinions are strong on purpose.
 
 ## Install
 
 ```bash
-pnpm add -D eslint-config-agentic eslint prettier typescript
+pnpm add -D eslint-config-agentic eslint typescript
 ```
 
 ## Use
@@ -57,7 +57,6 @@ export default [
 - **No escape hatches in `src/`**: type assertions (`as`) and non-null assertions (`!`) are banned; JSDoc/TSDoc required on declarations.
 - **Naming conventions**: kebab-case filenames, camelCase variables/functions, PascalCase types, UPPER_SNAKE_CASE for global const literals.
 - **Inlined agent guardrails**: empty catch blocks, `array.map(async ...)`, `catch (e: any)`, hardcoded secrets.
-- **Formatting**: Prettier runs as an ESLint rule (`eslint-config-prettier` disables conflicts last).
 
 ## Inlined agent guardrails
 
@@ -93,7 +92,6 @@ Plus ESLint's built-in `no-eval` (error) for `eval()` / `new Function()`.
 | Peer | Version |
 |------|---------|
 | eslint | `^9.0.0 \|\| ^10.0.0` |
-| prettier | `^3.0.0` |
 | typescript | `^5.0.0` |
 
 Requires **Node.js ≥ 26** — the Temporal API ships natively only from Node 26 (older Node needs `--js-temporal` on 24, or `@js-temporal/polyfill` on ≤22). All plugins are bundled as `dependencies`, so installing this one package is enough.
