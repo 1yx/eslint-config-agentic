@@ -9,7 +9,7 @@
 //   export default agentic({ tsconfigRootDir: import.meta.dirname });
 //
 // Config blocks are split by concern under src/configs/; custom rule implementations
-// live under src/rules/ (aggregated by src/index.mjs).
+// live under src/rules/ (aggregated by src/rules/index.mjs).
 
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
@@ -17,7 +17,7 @@ import tsdocPlugin from 'eslint-plugin-tsdoc';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
 import checkFile from 'eslint-plugin-check-file';
 import globals from 'globals';
-import agenticRules from './src/index.mjs';
+import agenticRules from './src/rules/index.mjs';
 import temporal from './src/configs/temporal.mjs';
 import qualityLimits from './src/configs/quality-limits.mjs';
 import escapeHatches from './src/configs/escape-hatches.mjs';
