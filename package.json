@@ -1,0 +1,56 @@
+{
+  "name": "eslint-config-agentic",
+  "version": "0.1.0",
+  "description": "Shareable ESLint flat config for AI-generated TypeScript: type safety, Promise safety, Temporal-only dates, inlined agent guardrails, and Prettier.",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "eslint",
+    "eslintconfig",
+    "eslint-config",
+    "flat-config",
+    "typescript",
+    "ai",
+    "agent",
+    "prettier"
+  ],
+  "author": "lyx",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1yx/eslint-config-agentic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/1yx/eslint-config-agentic/issues"
+  },
+  "homepage": "https://github.com/1yx/eslint-config-agentic#readme",
+  "license": "MIT",
+  "engines": {
+    "node": ">=26"
+  },
+  "peerDependencies": {
+    "eslint": "^9.0.0 || ^10.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
+    "eslint-config-prettier": "^10.1.0",
+    "eslint-plugin-check-file": "^3.3.1",
+    "eslint-plugin-jsdoc": "^62.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-tsdoc": "^0.5.0",
+    "globals": "^17.0.0"
+  }
+}
