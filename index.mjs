@@ -29,9 +29,16 @@ import promiseSafety from './configs/promise-safety.mjs';
  * @param {object} [options]
  * @param {string} [options.tsconfigRootDir] - Directory containing the consumer's tsconfig.json.
  *   Defaults to `process.cwd()` (the repo root when running `eslint .`).
+ * @param {boolean} [options.allowAsAssertions=false] - Permit `as` assertions at framework
+ *   type boundaries (JSON.parse, Response.json, drizzle `.set()`/`sql`, etc.) where the
+ *   framework's types are genuinely `unknown`. `as const` is always allowed; `!` stays
+ *   banned. See README → "Escape hatches & framework boundaries".
  * @returns {Array<object>} ESLint flat config array.
  */
-export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } = {}) {
+export default function agenticEslintConfig({
+  tsconfigRootDir = process.cwd(),
+  allowAsAssertions = false,
+} = {}) {
   return [
     {
       // Ignore build artifacts and third-party dependencies to reduce noise.
@@ -188,7 +195,8 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
     },
 
     // ========== Quality limits (max lines / depth / params / complexity) ==========
-    qualityLimits,
+    // React (.tsx/.jsx) relaxes max-lines-per-function here; see configs/quality-limits.mjs.
+    ...qualityLimits,
 
     // ========== Type-aware Promise safety ==========
     promiseSafety,
@@ -215,7 +223,8 @@ export default function agenticEslintConfig({ tsconfigRootDir = process.cwd() } 
     temporal,
 
     // ========== Ban `as` / `!` escape hatches in src ==========
-    escapeHatches,
+    // `as const` is always allowed; pass allowAsAssertions to permit framework-boundary `as`.
+    escapeHatches({ allowAsAssertions }),
 
     // ========== Require JSDoc/TSDoc on src declarations ==========
     {

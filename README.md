@@ -32,6 +32,19 @@ The config assumes eslint runs from your repo root (so `process.cwd()` is the pr
 export default agentic({ tsconfigRootDir: import.meta.dirname });
 ```
 
+## Options
+
+`agentic()` accepts an options object:
+
+| Option | Default | Purpose |
+|--------|---------|---------|
+| `tsconfigRootDir` | `process.cwd()` | Directory containing `tsconfig.json` for type-aware rules. |
+| `allowAsAssertions` | `false` | Permit `as` assertions at framework type boundaries (`JSON.parse`, `Response.json`, drizzle `.set()`/`sql`, …). `as const` is always allowed; `!` stays banned. See [Escape hatches & framework boundaries](#escape-hatches--framework-boundaries). |
+
+```js
+export default agentic({ allowAsAssertions: true });
+```
+
 ## Extend / override
 
 `agentic()` returns a plain flat-config array — spread it and append your own blocks:
@@ -53,15 +66,39 @@ Path globs use a `**/` prefix (e.g. `**/src/**`, `**/tests/**`), so the config w
 
 ## What it enforces
 
-- **Quality limits** (all errors): ≤50 lines/function, ≤500 lines/file, ≤4 nesting levels, ≤3 params, cyclomatic complexity ≤10.
+- **Quality limits** (all errors): ≤50 lines/function (logic), ≤500 lines/file, ≤4 nesting levels, ≤3 params, cyclomatic complexity ≤10. **React (`.tsx`/`.jsx`) is exempt from `max-lines-per-function`** — JSX inflates line count without inflating complexity; `complexity` and file-length remain as backstops.
 - **Core style**: no `var`, prefer `const`, strict equality (`==null` allowed), braces on all branches, template literals, shorthand, no duplicate imports, `no-eval`.
 - **TypeScript**: unused vars (`_` prefix ignored), type-only imports, `type` over `interface`, no `require()`, warn on `any`/unsafe-assignment/unsafe-return.
 - **Async / Promise safety** (errors): no floating promises, no misused promises, no awaiting non-thenables; warn on async-without-await.
-- **Temporal-only dates**: `new Date()`, `Date.now()`, `Date.parse()` are banned in `src/`, `tests/`, `scripts/` — use the Temporal API (shipped natively in Node 26+, Chrome 144, Firefox 139).
-- **No escape hatches in `src/`**: type assertions (`as`) and non-null assertions (`!`) are banned; JSDoc/TSDoc required on declarations.
+- **Temporal-only dates**: `new Date()`, `Date.now()`, `Date.parse()` are banned in `src/`, `tests/`, `scripts/` — use the Temporal API (**runtime**: shipped natively in Node 26+, Chrome 144, Firefox 139; **types**: see [Requirements](#requirements) — TypeScript does not yet ship Temporal types).
+- **No escape hatches in `src/`**: non-null assertions (`!`) are always banned; type assertions (`as`) are banned **except `as const`** (which only narrows, never widens). Pass `allowAsAssertions: true` to permit `as` at framework boundaries where the framework's types are genuinely `unknown`. JSDoc/TSDoc required on declarations.
 - **Naming conventions**: kebab-case filenames for `.ts`/`.js`; `.tsx`/`.jsx` follow the directory (`app/` → kebab, `components/` → PascalCase); camelCase variables/functions, PascalCase types, UPPER_SNAKE_CASE for global const literals.
 - **React-friendly**: `.tsx`/`.jsx` files are fully linted (not ignored); both Node and browser globals are available.
 - **Inlined agent guardrails**: empty catch blocks, `array.map(async ...)`, `catch (e: any)`, hardcoded secrets.
+
+## Escape hatches & framework boundaries
+
+In `src/`, the config bans TypeScript escape hatches because AI reaches for them to silence type errors:
+
+- **`!` (non-null assertion)** — always banned. Almost always a real null-handling bug.
+- **`as` (type assertion)** — banned **except `as const`**. `as const` only narrows a value (it can never widen its type), so it is never an escape hatch.
+
+Some frameworks genuinely need `as` because their types are `unknown` and the type system can't express the real shape:
+
+```ts
+const data = JSON.parse(raw) as MyShape;              // JSON.parse returns unknown
+const body = (await res.json()) as ApiResult;        // Response.json returns Promise<any>
+races.set(values as Partial<typeof races.$inferInsert>); // drizzle dynamic .set()
+const q = sql`...` as SQL<unknown>;                   // drizzle sql tag
+```
+
+If your project uses these, opt in once:
+
+```js
+export default agentic({ allowAsAssertions: true });
+```
+
+This lifts the `as` ban (keeping `!` and the `Date` ban). `as` should still be avoided by convention — use type guards, `zod`, or correct inference wherever a clean form exists; reserve `as` for the boundary cases above.
 
 ## Inlined agent guardrails
 
@@ -100,6 +137,36 @@ Plus ESLint's built-in `no-eval` (error) for `eval()` / `new Function()`.
 | typescript | `^5.0.0` |
 
 Requires **Node.js ≥ 26** — the Temporal API ships natively only from Node 26 (older Node needs `--js-temporal` on 24, or `@js-temporal/polyfill` on ≤22). All plugins are bundled as `dependencies`, so installing this one package is enough.
+
+### Temporal types (TypeScript prerequisite)
+
+> TypeScript does **not** ship `Temporal` types. The Temporal rule forces `Temporal.*` usage, but `tsc` will report `Cannot find name 'Temporal'` (TS2304) until you supply the global type yourself. This is a hard prerequisite for the Temporal rule, not optional.
+
+Runtime: Node 26+ provides `Temporal` globally — no import, no polyfill. Types: install `@js-temporal/polyfill` **as a dev dependency** and bridge it to the global with one ambient declaration file (the polyfill is used for **types only** — `import type` is erased at build time, so it adds **zero runtime/bundle cost** and does not shadow the native `Temporal`):
+
+```bash
+pnpm add -D @js-temporal/polyfill
+```
+
+```ts
+// src/types/temporal.d.ts — makes the global Temporal visible to tsc.
+// At runtime the native Node 26 Temporal is used; this only teaches TypeScript its shape.
+import type { Temporal as TemporalType } from '@js-temporal/polyfill';
+
+declare global {
+  const Temporal: typeof TemporalType;
+}
+```
+
+To annotate values with Temporal types elsewhere, import the type directly:
+
+```ts
+import type { Temporal as TemporalType } from '@js-temporal/polyfill';
+
+interface Event { startTime: TemporalType.ZonedDateTime }
+```
+
+When TypeScript eventually ships native Temporal types, delete `temporal.d.ts` and drop the dev dependency — no source changes needed.
 
 ## License
 
