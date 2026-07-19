@@ -15,6 +15,8 @@ export default function eslintConfigExclude() {
       '@typescript-eslint/no-misused-promises': 'off',
       '@typescript-eslint/await-thenable': 'off',
       '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/only-throw-error': 'off',
     },
   };
 }
