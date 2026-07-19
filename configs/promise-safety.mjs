@@ -13,7 +13,7 @@ export default function promiseSafety({ files } = {}) {
       '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/require-await': 'warn',
       // `new Promise(async ...)` — the async executor silently swallows rejections.
-      '@typescript-eslint/no-async-promise-executor': 'error',
+      'no-async-promise-executor': 'error',
     },
   };
 }
