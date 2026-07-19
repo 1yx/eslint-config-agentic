@@ -87,12 +87,13 @@ test('tsStrictness enables no-throw-literal and no-magic-numbers', () => {
   assert.equal(ts.rules['@typescript-eslint/prefer-nullish-coalescing'], 'warn', 'nullish coalescing preferred');
 });
 
-test('agentGuardrails ships weak-randomness, redundant-logic, llm-artifacts', () => {
+test('agentGuardrails ships weak-randomness, redundant-logic, llm-artifacts, swallowed-errors', () => {
   const cfg = agentic();
   const g = cfg.find((b) => b.rules?.['agentic/no-empty-catch']);
   assert.equal(g.rules['agentic/no-weak-randomness-for-secrets'], 'error');
   assert.equal(g.rules['agentic/no-redundant-logic'], 'warn');
   assert.equal(g.rules['agentic/no-llm-artifacts'], 'warn');
+  assert.equal(g.rules['agentic/no-swallowed-errors'], 'warn');
 });
 
 test('promiseSafety bans async promise executor', () => {

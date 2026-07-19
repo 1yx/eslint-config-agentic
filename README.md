@@ -53,7 +53,7 @@ export default [
 | `tsStrictness()` | type-only imports, `type` over `interface`, `no-explicit-any`, `unsafe-*`, `no-throw-literal`, `no-magic-numbers` (allowlisted), `prefer-nullish-coalescing` | all code |
 | `tsdoc()` | `tsdoc/syntax` | all code |
 | `promiseSafety()` | floating/misused promises, await-thenable, no async promise executor | all code |
-| `agentGuardrails()` | empty catch, async array callbacks, broad exceptions, secrets, weak randomness, redundant logic, LLM artifacts, `eval` | all code |
+| `agentGuardrails()` | empty/swallowed catch, async array callbacks, broad exceptions, secrets, weak randomness, redundant logic, LLM artifacts, `eval` | all code |
 | `qualityLimits()` | ≤50 lines/function, ≤500 lines/file, ≤4 depth, ≤3 params, complexity ≤10 | all code |
 | `temporal()` | ban `Date.*` — Temporal only | source + tests + scripts |
 | `escapeHatches()` | ban `as` (except `as const`; boundary call patterns allowlistable via `allowAsAssertions`) and `!` | source |
@@ -125,11 +125,12 @@ Some frameworks genuinely need `as` at their type boundary (`JSON.parse`, `Respo
 
 ## Inlined agent guardrails
 
-`agentGuardrails()` ships seven custom rules (in `rules/`) catching AI-specific bugs that typescript-eslint can't detect structurally:
+`agentGuardrails()` ships eight custom rules (in `rules/`) catching AI-specific bugs that typescript-eslint can't detect structurally:
 
 | Rule | Severity | Catches |
 |---|---|---|
 | `agentic/no-empty-catch` | error | `catch (e) {}` — silently swallows errors |
+| `agentic/no-swallowed-errors` | warn | `catch (e) { console.log(e) }` — logs but continues as if nothing failed |
 | `agentic/no-async-array-callback` | warn | `array.map(async ...)` — returns `Promise[]`, not values |
 | `agentic/no-broad-exception` | warn | `catch (e: any)` / un-narrowed `catch (e: unknown)` |
 | `agentic/no-hardcoded-secret` | error | `apiKey`, `password`, `token` literals in source |

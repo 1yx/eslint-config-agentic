@@ -10,6 +10,7 @@ export default function agentGuardrails({ files } = {}) {
     files: files ?? [allCode],
     rules: {
       'agentic/no-empty-catch': 'error',
+      'agentic/no-swallowed-errors': 'warn',
       'agentic/no-async-array-callback': 'warn',
       'agentic/no-broad-exception': 'warn',
       'agentic/no-hardcoded-secret': 'error',

@@ -13,6 +13,7 @@ import noEscapeAssertion from './no-escape-assertion.mjs';
 import noWeakRandomnessForSecrets from './no-weak-randomness-for-secrets.mjs';
 import noRedundantLogic from './no-redundant-logic.mjs';
 import noLlmArtifacts from './no-llm-artifacts.mjs';
+import noSwallowedErrors from './no-swallowed-errors.mjs';
 
 export default {
   meta: { name: 'eslint-config-agentic-rules', version: '0.1.0' },
@@ -26,5 +27,6 @@ export default {
     'no-weak-randomness-for-secrets': noWeakRandomnessForSecrets,
     'no-redundant-logic': noRedundantLogic,
     'no-llm-artifacts': noLlmArtifacts,
+    'no-swallowed-errors': noSwallowedErrors,
   },
 };
