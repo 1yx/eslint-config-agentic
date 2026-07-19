@@ -21,6 +21,8 @@ export default {
     messages: {
       escapeAssertion:
         'Avoid `as` assertions: use a type guard, explicit annotation, or correct inference. `as const` is always allowed. For framework boundaries (JSON.parse, Response.json, drizzle .set()/sql) add the call pattern to the rule\'s `allow` option.',
+      doubleAssertion:
+        'Double assertion (`x as unknown as T`) deliberately bypasses the type system — far more dangerous than a single `as`, and never a framework boundary. Refactor so the type relationship is real.',
     },
   },
   create(context) {
@@ -29,7 +31,14 @@ export default {
       TSAsExpression(node) {
         // `as const` only narrows a value — never an escape hatch.
         if (node.typeAnnotation?.typeName?.name === 'const') return;
+        // Inner half of a double assertion — the outer `as T` reports it; skip here.
+        if (node.parent?.type === 'TSAsExpression' && node.parent.expression === node) return;
         if (matchesAllowedCallee(node.expression, allow)) return;
+        // `x as unknown as T` — deliberately punches through the type system.
+        if (node.expression.type === 'TSAsExpression') {
+          context.report({ node, messageId: 'doubleAssertion' });
+          return;
+        }
         context.report({ node, messageId: 'escapeAssertion' });
       },
     };

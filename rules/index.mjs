@@ -10,6 +10,9 @@ import noBroadException from './no-broad-exception.mjs';
 import noHardcodedSecret from './no-hardcoded-secret.mjs';
 import globalLiteralConstNaming from './global-literal-const-naming.mjs';
 import noEscapeAssertion from './no-escape-assertion.mjs';
+import noWeakRandomnessForSecrets from './no-weak-randomness-for-secrets.mjs';
+import noRedundantLogic from './no-redundant-logic.mjs';
+import noLlmArtifacts from './no-llm-artifacts.mjs';
 
 export default {
   meta: { name: 'eslint-config-agentic-rules', version: '0.1.0' },
@@ -20,5 +23,8 @@ export default {
     'no-hardcoded-secret': noHardcodedSecret,
     'global-literal-const-naming': globalLiteralConstNaming,
     'no-escape-assertion': noEscapeAssertion,
+    'no-weak-randomness-for-secrets': noWeakRandomnessForSecrets,
+    'no-redundant-logic': noRedundantLogic,
+    'no-llm-artifacts': noLlmArtifacts,
   },
 };

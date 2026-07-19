@@ -76,6 +76,31 @@ test('compose: base() + selected blocks assembles a valid partial config', () =>
   assert.ok(cfg.find((b) => b.rules?.['no-restricted-properties']), 'temporal');
 });
 
+test('tsStrictness enables no-throw-literal and no-magic-numbers', () => {
+  const cfg = agentic();
+  const ts = cfg.find((b) => b.rules?.['@typescript-eslint/no-explicit-any'] === 'warn');
+  assert.equal(ts.rules['@typescript-eslint/no-throw-literal'], 'error', 'throws non-Error banned');
+  assert.ok(
+    Array.isArray(ts.rules['@typescript-eslint/no-magic-numbers']),
+    'magic-numbers configured with allowlist',
+  );
+  assert.equal(ts.rules['@typescript-eslint/prefer-nullish-coalescing'], 'warn', 'nullish coalescing preferred');
+});
+
+test('agentGuardrails ships weak-randomness, redundant-logic, llm-artifacts', () => {
+  const cfg = agentic();
+  const g = cfg.find((b) => b.rules?.['agentic/no-empty-catch']);
+  assert.equal(g.rules['agentic/no-weak-randomness-for-secrets'], 'error');
+  assert.equal(g.rules['agentic/no-redundant-logic'], 'warn');
+  assert.equal(g.rules['agentic/no-llm-artifacts'], 'warn');
+});
+
+test('promiseSafety bans async promise executor', () => {
+  const cfg = agentic();
+  const p = cfg.find((b) => b.rules?.['@typescript-eslint/no-floating-promises']);
+  assert.equal(p.rules['@typescript-eslint/no-async-promise-executor'], 'error');
+});
+
 test('escapeHatches: default enables no-escape-assertion with empty allow', () => {
   const block = escapeHatches();
   assert.deepEqual(block.rules['agentic/no-escape-assertion'], ['error', { allow: [] }]);

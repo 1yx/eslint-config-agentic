@@ -13,6 +13,9 @@ export default function agentGuardrails({ files } = {}) {
       'agentic/no-async-array-callback': 'warn',
       'agentic/no-broad-exception': 'warn',
       'agentic/no-hardcoded-secret': 'error',
+      'agentic/no-weak-randomness-for-secrets': 'error',
+      'agentic/no-redundant-logic': 'warn',
+      'agentic/no-llm-artifacts': 'warn',
       'no-eval': 'error',
     },
   };

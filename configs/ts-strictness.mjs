@@ -18,9 +18,25 @@ export default function tsStrictness({ files } = {}) {
       ],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/no-require-imports': 'error',
+      // `??` over `||` for nullish defaults — `||` also swallows 0 / '' / false.
+      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unsafe-assignment': 'warn',
       '@typescript-eslint/no-unsafe-return': 'warn',
+      // AI throws strings/numbers instead of Error — loses stack trace and catch typing.
+      '@typescript-eslint/no-throw-literal': 'error',
+      // AI sprinkles bare numeric literals; warn with an allowlist for trivial values.
+      '@typescript-eslint/no-magic-numbers': [
+        'warn',
+        {
+          ignore: [0, 1, -1],
+          ignoreArrayIndexes: true,
+          ignoreEnums: true,
+          ignoreNumericLiteralTypes: true,
+          ignoreReadonlyClassProperties: true,
+          ignoreTypeIndexes: true,
+        },
+      ],
     },
   };
 }
