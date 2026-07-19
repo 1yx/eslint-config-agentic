@@ -99,7 +99,7 @@ test('agentGuardrails ships weak-randomness, redundant-logic, llm-artifacts, swa
 test('promiseSafety bans async promise executor', () => {
   const cfg = agentic();
   const p = cfg.find((b) => b.rules?.['@typescript-eslint/no-floating-promises']);
-  assert.equal(p.rules['@typescript-eslint/no-async-promise-executor'], 'error');
+  assert.equal(p.rules['no-async-promise-executor'], 'error');
 });
 
 test('escapeHatches: default enables no-escape-assertion with empty allow', () => {
