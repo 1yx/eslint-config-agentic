@@ -1,42 +1,29 @@
-// Ban TypeScript escape hatches in src — AI frequently uses `as` and `!` to silence
-// type errors rather than handling them.
-//
-// `as const` is intentionally excluded from the ban: it only narrows a value's type
-// (never widens), so it is never an escape hatch. Some frameworks genuinely need `as`
-// at their type boundary because the type system cannot express the return shape —
-// `JSON.parse()`, `Response.json()`, and drizzle's dynamic `.set()` / `sql` tag return
-// `unknown` or `SQL<unknown>`. For projects using those, opt in with
-// `agentic({ allowAsAssertions: true })`. Non-null assertions (`!`) stay banned
-// either way — they are almost always a real null-handling bug, not a boundary artifact.
-//
-// The `new Date()` selector is re-declared here on purpose: flat config replaces a
-// rule's array value wholesale, so without this, this src-scoped block would shadow
-// the Date ban from configs/temporal.mjs (which covers src+tests+scripts) and silently
-// un-ban Date in src.
+// Ban TypeScript escape hatches in source — AI reaches for `as` and `!` to silence type
+// errors. `as const` is always allowed (it only narrows). `!` is always banned.
+// `as` at framework boundaries (JSON.parse, Response.json, drizzle) opt-in via
+// `allowAsAssertions`. The Date selector is re-declared here because flat config replaces
+// rule arrays wholesale — without it this block would shadow the temporal Date ban in source.
+
+import { sourceDefault } from './globs.mjs';
 
 /**
- * Build the src-scoped escape-hatch config block.
- *
  * @param {object} [options]
- * @param {boolean} [options.allowAsAssertions=false] - Permit `as` assertions at
- *   framework type boundaries (`JSON.parse`, `Response.json`, drizzle `.set()`/`sql`,
- *   etc.) where the framework's types are genuinely `unknown`. `as const` is always
- *   allowed regardless; `!` (non-null) is always banned.
- * @returns {object} ESLint flat-config block.
+ * @param {boolean} [options.allowAsAssertions=false]
+ * @param {string[]} [options.sourceFiles]
  */
-export default function escapeHatches({ allowAsAssertions = false } = {}) {
+export default function escapeHatches({ allowAsAssertions = false, sourceFiles } = {}) {
   const asSelector = allowAsAssertions
     ? []
     : [
         {
           selector: 'TSAsExpression[typeAnnotation.typeName.name!="const"]',
           message:
-            'Avoid `as` assertions: use a type guard, explicit annotation, or correct inference instead. `as const` is always allowed; for framework boundaries (JSON.parse, Response.json, drizzle .set()/sql) opt in via agentic({ allowAsAssertions: true }).',
+            'Avoid `as` assertions: use a type guard, explicit annotation, or correct inference instead. `as const` is always allowed; for framework boundaries (JSON.parse, Response.json, drizzle .set()/sql) opt in via allowAsAssertions: true.',
         },
       ];
 
   return {
-    files: ['**/src/**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}'],
+    files: sourceFiles ?? [sourceDefault],
     rules: {
       'no-restricted-syntax': [
         'error',

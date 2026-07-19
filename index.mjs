@@ -1,305 +1,84 @@
-// eslint-config-agentic — shareable ESLint flat config.
-// Design goal: maximize consistency, type safety, and async correctness in AI-generated code.
+// eslint-config-agentic — framework-neutral, composable ESLint flat config for
+// AI-generated TypeScript.
 //
-// Usage (consumer's eslint.config.mjs):
-//   import agentic from 'eslint-config-agentic';
-//   export default agentic();
+// Two ways to use:
 //
-// Override the project root (only if eslint isn't run from your repo root):
-//   export default agentic({ tsconfigRootDir: import.meta.dirname });
+//   1. Preset (everything on, one call):
+//        import agentic from 'eslint-config-agentic';
+//        export default agentic();
 //
-// Config blocks are split by concern under configs/; custom rule implementations
-// live under rules/ (aggregated by rules/index.mjs).
+//   2. Compose (pick the blocks you want — `base()` first, it provides parser + plugins):
+//        import { base, temporal, promiseSafety } from 'eslint-config-agentic';
+//        export default [base(), temporal(), promiseSafety()];
+//
+// Each block is a function returning a flat-config object (or array). `base()` registers
+// the parser and all plugins; rule blocks depend on it, so include `base()` first.
+// tsx/jsx are deliberately absent from defaults — React/Vue opt in via `files` or the
+// templates in ./templates/.
 
-import tsParser from '@typescript-eslint/parser';
-import tsPlugin from '@typescript-eslint/eslint-plugin';
-import tsdocPlugin from 'eslint-plugin-tsdoc';
-import jsdocPlugin from 'eslint-plugin-jsdoc';
-import checkFile from 'eslint-plugin-check-file';
-import globals from 'globals';
-import agenticRules from './rules/index.mjs';
-import temporal from './configs/temporal.mjs';
-import qualityLimits from './configs/quality-limits.mjs';
-import escapeHatches from './configs/escape-hatches.mjs';
+import base from './configs/base.mjs';
+import coreStyle from './configs/core-style.mjs';
+import naming from './configs/naming.mjs';
+import checkFile from './configs/check-file.mjs';
+import tsStrictness from './configs/ts-strictness.mjs';
+import tsdoc from './configs/tsdoc.mjs';
 import promiseSafety from './configs/promise-safety.mjs';
+import agentGuardrails from './configs/agent-guardrails.mjs';
+import qualityLimits from './configs/quality-limits.mjs';
+import temporal from './configs/temporal.mjs';
+import escapeHatches from './configs/escape-hatches.mjs';
+import jsdoc from './configs/jsdoc.mjs';
+import scriptsRelax from './configs/scripts-relax.mjs';
+import eslintConfigExclude from './configs/eslint-config-exclude.mjs';
+
+// Named exports — compose your own config from these.
+export {
+  base,
+  coreStyle,
+  naming,
+  checkFile,
+  tsStrictness,
+  tsdoc,
+  promiseSafety,
+  agentGuardrails,
+  qualityLimits,
+  temporal,
+  escapeHatches,
+  jsdoc,
+  scriptsRelax,
+  eslintConfigExclude,
+};
 
 /**
- * Build the ESLint flat config array.
+ * Preset: every block enabled, framework-neutral defaults. Equivalent to composing all
+ * named exports. Options thread through to the relevant blocks.
  *
  * @param {object} [options]
- * @param {string} [options.tsconfigRootDir] - Directory containing the consumer's tsconfig.json.
- *   Defaults to `process.cwd()` (the repo root when running `eslint .`).
- * @param {boolean} [options.allowAsAssertions=false] - Permit `as` assertions at framework
- *   type boundaries (JSON.parse, Response.json, drizzle `.set()`/`sql`, etc.) where the
- *   framework's types are genuinely `unknown`. `as const` is always allowed; `!` stays
- *   banned. See README → "Escape hatches & framework boundaries".
+ * @param {string} [options.tsconfigRootDir] - Dir with tsconfig.json. Defaults to cwd.
+ * @param {string[]} [options.files] - Override the all-code glob (add tsx/jsx for React).
+ * @param {string[]} [options.sourceFiles] - Source globs for Temporal/escape-hatch/jsdoc.
+ * @param {string[]} [options.scriptFiles] - Script globs for scripts-relax + Temporal.
+ * @param {Object<string, string>} [options.filenameConventions] - Extra check-file entries.
+ * @param {Object<string, (number|false)>} [options.maxLinesPerFunction] - Per-glob overrides.
+ * @param {boolean} [options.allowAsAssertions=false] - Permit `as` at framework boundaries.
  * @returns {Array<object>} ESLint flat config array.
  */
-export default function agenticEslintConfig({
-  tsconfigRootDir = process.cwd(),
-  allowAsAssertions = false,
-} = {}) {
+export default function agentic(options = {}) {
+  const { files } = options;
   return [
-    {
-      // Ignore build artifacts and third-party dependencies to reduce noise.
-      ignores: [
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/coverage/**',
-        '**/.next/**',
-        '**/playwright-report/**',
-        '**/test-results/**',
-      ],
-    },
-
-    // ========== Base: parser, plugins, naming, core style, TS strictness, TSDoc ==========
-    {
-      files: ['**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}'],
-
-      languageOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        parser: tsParser,
-        parserOptions: {
-          sourceType: 'module',
-          ecmaVersion: 'latest',
-          // Enable type-aware linting — required by configs/promise-safety.mjs and the
-          // unsafe-* rules below. Without this, the most valuable rules are silently disabled.
-          project: true,
-          tsconfigRootDir,
-        },
-        globals: {
-          // Node.js + browser globals for full-stack coverage (process, Buffer, window, document).
-          ...globals.node,
-          ...globals.browser,
-        },
-      },
-
-      plugins: {
-        '@typescript-eslint': tsPlugin,
-        tsdoc: tsdocPlugin,
-        jsdoc: jsdocPlugin,
-        'check-file': checkFile,
-      },
-
-      rules: {
-        // ========== Naming Conventions ==========
-        //
-        // | Rule                                       | Behavior                                                          |
-        // |--------------------------------------------|-------------------------------------------------------------------|
-        // | `agentic/global-literal-const-naming`      | Global const + literal init → UPPER_SNAKE_CASE                    |
-        // | `naming-convention` global const            | UPPER_CASE or camelCase (complex objects exempt via custom rule)  |
-        // | `naming-convention` variable/function/param | camelCase, leading underscore allowed                             |
-        // | `naming-convention` property                | Skipped (HTTP headers, i18n keys, API response fields)            |
-        // | `naming-convention` typeLike                | PascalCase (class, interface, type alias, enum)                   |
-        // | `check-file/filename-naming-convention`     | kebab-case for src/test/scripts files                             |
-
-        // Global const with literal values must be UPPER_SNAKE_CASE.
-        'agentic/global-literal-const-naming': 'error',
-
-        // Enforce symbol naming conventions.
-        '@typescript-eslint/naming-convention': [
-          'error',
-          { selector: 'typeLike', format: ['PascalCase'] },
-          { selector: 'variable', format: ['PascalCase', 'camelCase'], filter: { regex: 'Schema$', match: true } },
-          { selector: 'variable', modifiers: ['const', 'global'], format: ['UPPER_CASE', 'camelCase'] },
-          { selector: ['variable', 'function', 'parameter'], format: ['camelCase'], leadingUnderscore: 'allow' },
-          { selector: 'property', format: null },
-        ],
-
-        // .tsx/.jsx naming follows the directory: app/ (Next.js pages/layouts) → kebab,
-        // components/ → PascalCase. No broad **/*.{tsx,jsx} key — check-file is
-        // all-patterns-must-pass, so a broad key would conflict with the app/ rule.
-        'check-file/filename-naming-convention': [
-          'error',
-          {
-            '**/app/**/*.{tsx,jsx}': 'KEBAB_CASE',
-            '**/components/**/*.{tsx,jsx}': 'PASCAL_CASE',
-            '**/src/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
-            '**/test/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
-            '**/tests/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
-            '**/scripts/**/*.{js,mjs,cjs,ts,mts,cts}': 'KEBAB_CASE',
-          },
-          { ignoreMiddleExtensions: true },
-        ],
-
-        // ========== Core Code Style ==========
-
-        // Delegate unused-var enforcement to the TS version to avoid duplicate reports.
-        'no-unused-vars': 'off',
-        // Disallow var — block scoping prevents implicit hoisting surprises.
-        'no-var': 'error',
-        // Prefer const everywhere possible to reduce mutable-state cognitive load.
-        'prefer-const': ['error', { destructuring: 'all' }],
-        // Always use strict equality; null is the only exception (x == null catches undefined too).
-        eqeqeq: ['error', 'always', { null: 'ignore' }],
-        // Require braces on all control-flow branches — AI frequently omits them on single-liners.
-        curly: ['error', 'all'],
-        // Enforce object method/property shorthand for consistent output shape.
-        'object-shorthand': 'error',
-        // Enforce template literals over string concatenation to eliminate style forks.
-        'prefer-template': 'error',
-        // Disallow duplicate imports — reduces redundant context in AI-generated files.
-        'no-duplicate-imports': 'error',
-        // Disallow unreachable code — prevents AI from emitting dead branches.
-        'no-unreachable': 'error',
-        // Disallow unsafe optional chaining patterns that collapse at runtime.
-        'no-unsafe-optional-chaining': 'error',
-        // Allow console — CLI/automation projects legitimately rely on process logs.
-        'no-console': 'off',
-        // Warn on debugger statements so they can't silently land in production.
-        'no-debugger': 'warn',
-
-        // ========== TypeScript strictness ==========
-
-        // Unused variables: allow _ prefix as an intentional discard marker.
-        '@typescript-eslint/no-unused-vars': [
-          'error',
-          {
-            argsIgnorePattern: '^_',
-            varsIgnorePattern: '^_',
-            caughtErrorsIgnorePattern: '^_',
-          },
-        ],
-
-        // Enforce type-only imports to prevent accidental runtime-side-effect imports.
-        '@typescript-eslint/consistent-type-imports': [
-          'error',
-          {
-            prefer: 'type-imports',
-            disallowTypeAnnotations: false,
-            fixStyle: 'inline-type-imports',
-          },
-        ],
-
-        // Unify on `type` aliases — mixing interface and type creates unnecessary style forks.
-        '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-
-        // Disallow implicit require() calls — keeps ESM semantics consistent throughout.
-        '@typescript-eslint/no-require-imports': 'error',
-
-        // Warn on explicit `any` — AI habitually reaches for any to silence type errors.
-        '@typescript-eslint/no-explicit-any': 'warn',
-
-        // Disallow assigning values typed as `any` — catches the silent spread of any.
-        '@typescript-eslint/no-unsafe-assignment': 'warn',
-
-        // Disallow returning `any` from functions — keeps return types trustworthy.
-        '@typescript-eslint/no-unsafe-return': 'warn',
-
-        // ========== TSDoc ==========
-
-        // Validate TSDoc comment syntax at warn level.
-        'tsdoc/syntax': 'warn',
-      },
-    },
-
-    // ========== Quality limits (max lines / depth / params / complexity) ==========
-    // React (.tsx/.jsx) relaxes max-lines-per-function here; see configs/quality-limits.mjs.
-    ...qualityLimits,
-
-    // ========== Type-aware Promise safety ==========
-    promiseSafety,
-
-    // ========== Agent semantic guardrails (inlined custom rules) ==========
-    {
-      // Catches patterns typescript-eslint cannot detect structurally: empty catch
-      // blocks, `array.map(async ...)` returning Promise[], overly broad catch types,
-      // and hardcoded secrets. `no-eval` is ESLint's built-in.
-      files: ['**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}'],
-      plugins: {
-        agentic: agenticRules,
-      },
-      rules: {
-        'agentic/no-empty-catch': 'error',
-        'agentic/no-async-array-callback': 'warn',
-        'agentic/no-broad-exception': 'warn',
-        'agentic/no-hardcoded-secret': 'error',
-        'no-eval': 'error',
-      },
-    },
-
-    // ========== Force Temporal API (ban Date) in src/tests/scripts ==========
-    temporal,
-
-    // ========== Ban `as` / `!` escape hatches in src ==========
-    // `as const` is always allowed; pass allowAsAssertions to permit framework-boundary `as`.
-    escapeHatches({ allowAsAssertions }),
-
-    // ========== Require JSDoc/TSDoc on src declarations ==========
-    {
-      files: ['**/src/**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}'],
-      rules: {
-        'jsdoc/require-jsdoc': [
-          'warn',
-          {
-            require: {
-              FunctionDeclaration: true,
-              FunctionExpression: true,
-              // Exclude arrow functions — short callbacks and inline transforms are too noisy.
-              ArrowFunctionExpression: false,
-              ClassDeclaration: true,
-              MethodDefinition: true,
-            },
-            contexts: ['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSEnumDeclaration'],
-            checkAllFunctionExpressions: false,
-            // Enforce on all declarations, not just exported ones — internal logic also benefits.
-            publicOnly: false,
-          },
-        ],
-      },
-    },
-
-    // ========== Exclude the flat config file itself from type-aware parsing ==========
-    {
-      files: ['eslint.config.{js,mjs,cjs}'],
-      languageOptions: {
-        parserOptions: {
-          project: false,
-        },
-      },
-      rules: {
-        '@typescript-eslint/no-unsafe-assignment': 'off',
-        '@typescript-eslint/no-unsafe-return': 'off',
-        '@typescript-eslint/no-floating-promises': 'off',
-        '@typescript-eslint/no-misused-promises': 'off',
-        '@typescript-eslint/await-thenable': 'off',
-        '@typescript-eslint/require-await': 'off',
-      },
-    },
-
-    // ========== Relax limits in scripts/ ==========
-    {
-      // One-off utilities and debug tools, not production code paths.
-      // Core safety rules (types, async, imports) still apply.
-      files: [
-        '**/scripts/**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}',
-        '**/src/scripts/**/*.{js,mjs,cjs,ts,mts,cts,tsx,jsx}',
-      ],
-      rules: {
-        'max-lines-per-function': 'off',
-        'max-lines': 'off',
-        complexity: 'off',
-        'max-params': 'off',
-        'max-depth': 'off',
-        'jsdoc/require-jsdoc': 'off',
-      },
-    },
-
-    // ========== Re-enable built-in unused-vars for plain JS ==========
-    {
-      // TS files use @typescript-eslint/no-unused-vars; this covers plain JS.
-      files: ['**/*.{js,mjs,cjs}'],
-      rules: {
-        'no-unused-vars': [
-          'error',
-          {
-            argsIgnorePattern: '^_',
-            varsIgnorePattern: '^_',
-            caughtErrorsIgnorePattern: '^_',
-          },
-        ],
-      },
-    },
+    ...base(options),
+    ...coreStyle({ files }),
+    naming({ files }),
+    checkFile(options),
+    tsStrictness({ files }),
+    tsdoc({ files }),
+    promiseSafety({ files }),
+    agentGuardrails({ files }),
+    ...qualityLimits({ ...options, files }),
+    temporal(options),
+    escapeHatches(options),
+    jsdoc(options),
+    scriptsRelax(options),
+    eslintConfigExclude(),
   ];
 }

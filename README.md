@@ -1,6 +1,6 @@
 # eslint-config-agentic
 
-Shareable ESLint **flat config** tuned for AI-generated TypeScript. One package gives you: type safety, Promise safety, **Temporal-only dates**, and **inlined agent semantic guardrails** — all in a single pass.
+Composable ESLint flat config for AI-generated TypeScript. **Framework-neutral by default** — no React/Vue/Svelte baked in. Type safety, Promise safety, Temporal-only dates, and inlined agent guardrails, exposed as independent blocks you compose — plus a one-call preset.
 
 Derived from a production agent codebase. Opinions are strong on purpose.
 
@@ -12,122 +12,122 @@ pnpm add -D eslint-config-agentic eslint typescript
 
 ## Use
 
-Create `eslint.config.mjs` in your project root:
+Two ways. **Preset** (everything on, one call) or **compose** (pick blocks).
+
+### Preset
 
 ```js
+// eslint.config.mjs
 import agentic from 'eslint-config-agentic';
-
 export default agentic();
 ```
 
-Run ESLint:
+### Compose
 
-```bash
-pnpm eslint .
-```
-
-The config assumes eslint runs from your repo root (so `process.cwd()` is the project root, which `@typescript-eslint` needs to locate `tsconfig.json`). Override if not:
+Each concern is an independently-imported block. `base()` provides the parser and plugin registry — include it **first**, then add what you want:
 
 ```js
-export default agentic({ tsconfigRootDir: import.meta.dirname });
-```
-
-## Options
-
-`agentic()` accepts an options object:
-
-| Option | Default | Purpose |
-|--------|---------|---------|
-| `tsconfigRootDir` | `process.cwd()` | Directory containing `tsconfig.json` for type-aware rules. |
-| `allowAsAssertions` | `false` | Permit `as` assertions at framework type boundaries (`JSON.parse`, `Response.json`, drizzle `.set()`/`sql`, …). `as const` is always allowed; `!` stays banned. See [Escape hatches & framework boundaries](#escape-hatches--framework-boundaries). |
-
-```js
-export default agentic({ allowAsAssertions: true });
-```
-
-## Extend / override
-
-`agentic()` returns a plain flat-config array — spread it and append your own blocks:
-
-```js
-import agentic from 'eslint-config-agentic';
+import { base, coreStyle, tsStrictness, promiseSafety, agentGuardrails, temporal } from 'eslint-config-agentic';
 
 export default [
-  ...agentic(),
-  {
-    rules: { 'no-console': 'error' },
-  },
+  ...base(),
+  ...coreStyle(),
+  tsStrictness(),
+  promiseSafety(),
+  agentGuardrails(),
+  temporal(),
+  // skip naming/jsdoc/escapeHatches/qualityLimits/scriptsRelax if you don't want them
 ];
 ```
 
-## Monorepo
+`agentic()` is exactly the composition of all fourteen blocks — use it when you want everything.
 
-Path globs use a `**/` prefix (e.g. `**/src/**`, `**/tests/**`), so the config works identically in a **single-package repo** (`src/foo.ts`) and a **monorepo** (`packages/foo/src/bar.ts`) from one root config. Type-aware rules resolve each file's nearest `tsconfig.json`, so per-package tsconfigs work out of the box.
+## Blocks
 
-## What it enforces
+| Block | Enforces | Default scope |
+|-------|----------|---------------|
+| `base()` | parser, plugins, ignores, globals | all code |
+| `coreStyle()` | `no-var`, `prefer-const`, `eqeqeq`, `curly`, templates, unreachable | all code |
+| `naming()` | `naming-convention` + global-literal-const UPPER_SNAKE | all code |
+| `checkFile()` | filename naming (kebab for `src`/`test`/`tests`/`scripts`) | all code |
+| `tsStrictness()` | type-only imports, `type` over `interface`, `no-explicit-any`, `unsafe-*` | all code |
+| `tsdoc()` | `tsdoc/syntax` | all code |
+| `promiseSafety()` | floating/misused promises, await-thenable | all code |
+| `agentGuardrails()` | empty catch, async array callbacks, broad exceptions, secrets, `eval` | all code |
+| `qualityLimits()` | ≤50 lines/function, ≤500 lines/file, ≤4 depth, ≤3 params, complexity ≤10 | all code |
+| `temporal()` | ban `Date.*` — Temporal only | source + tests + scripts |
+| `escapeHatches()` | ban `as` (except `as const`) and `!` | source |
+| `jsdoc()` | require JSDoc on declarations | source |
+| `scriptsRelax()` | turn off limits + JSDoc for scripts | scripts |
+| `eslintConfigExclude()` | exclude `eslint.config.*` from type-aware | config file |
 
-- **Quality limits** (all errors): ≤50 lines/function (logic), ≤500 lines/file, ≤4 nesting levels, ≤3 params, cyclomatic complexity ≤10. **React (`.tsx`/`.jsx`) is exempt from `max-lines-per-function`** — JSX inflates line count without inflating complexity; `complexity` and file-length remain as backstops.
-- **Core style**: no `var`, prefer `const`, strict equality (`==null` allowed), braces on all branches, template literals, shorthand, no duplicate imports, `no-eval`.
-- **TypeScript**: unused vars (`_` prefix ignored), type-only imports, `type` over `interface`, no `require()`, warn on `any`/unsafe-assignment/unsafe-return.
-- **Async / Promise safety** (errors): no floating promises, no misused promises, no awaiting non-thenables; warn on async-without-await.
-- **Temporal-only dates**: `new Date()`, `Date.now()`, `Date.parse()` are banned in `src/`, `tests/`, `scripts/` — use the Temporal API (**runtime**: shipped natively in Node 26+, Chrome 144, Firefox 139; **types**: see [Requirements](#requirements) — TypeScript does not yet ship Temporal types).
-- **No escape hatches in `src/`**: non-null assertions (`!`) are always banned; type assertions (`as`) are banned **except `as const`** (which only narrows, never widens). Pass `allowAsAssertions: true` to permit `as` at framework boundaries where the framework's types are genuinely `unknown`. JSDoc/TSDoc required on declarations.
-- **Naming conventions**: kebab-case filenames for `.ts`/`.js`; `.tsx`/`.jsx` follow the directory (`app/` → kebab, `components/` → PascalCase); camelCase variables/functions, PascalCase types, UPPER_SNAKE_CASE for global const literals.
-- **React-friendly**: `.tsx`/`.jsx` files are fully linted (not ignored); both Node and browser globals are available.
-- **Inlined agent guardrails**: empty catch blocks, `array.map(async ...)`, `catch (e: any)`, hardcoded secrets.
+**"All code" defaults to `**/*.{js,mjs,cjs,ts,mts,cts}` — no `tsx`/`jsx`.** Add them via the `files` option (per-block, or on the preset).
+
+## Preset options
+
+`agentic(options)` threads options to the relevant blocks:
+
+| Option | Default | Purpose |
+|--------|---------|---------|
+| `tsconfigRootDir` | `process.cwd()` | Dir with `tsconfig.json` for type-aware rules. |
+| `files` | all code (no tsx/jsx) | Override the all-code glob — add `tsx`/`jsx`/`vue` for frameworks. |
+| `sourceFiles` | `src/` | Source globs for `temporal`, `escapeHatches`, `jsdoc`. |
+| `scriptFiles` | `scripts/` + `src/scripts/` | Script globs for `scriptsRelax` + `temporal`. |
+| `filenameConventions` | `{}` | Extra `glob → convention` entries merged into `checkFile` defaults (your keys win). |
+| `maxLinesPerFunction` | `{}` | Per-glob overrides for `max-lines-per-function`: `{ glob: false \| number }`. `false` disables; a number caps. |
+| `allowAsAssertions` | `false` | Permit `as` at framework type boundaries. `as const` always allowed; `!` always banned. |
+
+```js
+export default agentic({
+  files: ['**/*.{ts,tsx}'],          // lint tsx too
+  sourceFiles: ['**/src/**/*.{ts,tsx}'],
+  maxLinesPerFunction: { '**/*.{tsx,jsx}': false },
+});
+```
+
+## Templates
+
+Ready-made starting points in [`templates/`](./templates) — copy one as your `eslint.config.mjs`:
+
+- **`templates/basic.mjs`** — plain TypeScript (Node CLI, library). The preset, zero config.
+- **`templates/react.mjs`** — React/Next.js. Adds `tsx`/`jsx` back to scope, restores `app/`→kebab + `components/`→PascalCase filename rules, relaxes `max-lines-per-function` for JSX.
+- **`templates/vue.mjs`** — Vue 3. Layers `vue-eslint-parser` (outer) + `@typescript-eslint/parser` (for `<script>`) and `eslint-plugin-vue` recommended. Needs `pnpm add -D eslint-plugin-vue vue-eslint-parser`.
+
+## Composing with framework plugins
+
+This config does **not** bundle framework parsers/plugins — add the one you need. The Vue template shows the full pattern; the key points:
+
+- `.vue`/`.svelte` need their own parser block (outer framework parser + nested `@typescript-eslint/parser` for `<script>`).
+- **Framework-boundary rules extend automatically** when you add the glob to `files`, `sourceFiles`, `maxLinesPerFunction`, or `filenameConventions` — those blocks match whatever glob you give them.
+- **Core TS/style rules also cover framework files** once they're in `files` (since 0.2.0 — `base()` registers the `@typescript-eslint` plugin globally, and rule blocks match your `files` glob). For rules specific to the framework (e.g. Vue template rules), add the plugin's recommended config.
 
 ## Escape hatches & framework boundaries
 
-In `src/`, the config bans TypeScript escape hatches because AI reaches for them to silence type errors:
+In source, the config bans TypeScript escape hatches because AI reaches for them to silence type errors:
 
 - **`!` (non-null assertion)** — always banned. Almost always a real null-handling bug.
-- **`as` (type assertion)** — banned **except `as const`**. `as const` only narrows a value (it can never widen its type), so it is never an escape hatch.
+- **`as` (type assertion)** — banned **except `as const`**. `as const` only narrows, never widens.
 
-Some frameworks genuinely need `as` because their types are `unknown` and the type system can't express the real shape:
-
-```ts
-const data = JSON.parse(raw) as MyShape;              // JSON.parse returns unknown
-const body = (await res.json()) as ApiResult;        // Response.json returns Promise<any>
-races.set(values as Partial<typeof races.$inferInsert>); // drizzle dynamic .set()
-const q = sql`...` as SQL<unknown>;                   // drizzle sql tag
-```
-
-If your project uses these, opt in once:
+Some frameworks genuinely need `as` at their type boundary (`JSON.parse`, `Response.json`, drizzle `.set()`/`sql` return `unknown`). Opt in once:
 
 ```js
 export default agentic({ allowAsAssertions: true });
 ```
 
-This lifts the `as` ban (keeping `!` and the `Date` ban). `as` should still be avoided by convention — use type guards, `zod`, or correct inference wherever a clean form exists; reserve `as` for the boundary cases above.
+Or per-block: `escapeHatches({ allowAsAssertions: true })`.
 
 ## Inlined agent guardrails
 
-Four custom rules ship inside this package (in `rules.mjs`), catching AI-specific bugs that **typescript-eslint cannot detect structurally**:
+`agentGuardrails()` ships four custom rules (in `rules/`) catching AI-specific bugs that typescript-eslint can't detect structurally:
 
 | Rule | Severity | Catches |
 |---|---|---|
 | `agentic/no-empty-catch` | error | `catch (e) {}` — silently swallows errors |
 | `agentic/no-async-array-callback` | warn | `array.map(async ...)` — returns `Promise[]`, not values |
 | `agentic/no-broad-exception` | warn | `catch (e: any)` / un-narrowed `catch (e: unknown)` |
-| `agentic/no-hardcoded-secret` | error | `apiKey`, `password`, `token` literals committed to source |
+| `agentic/no-hardcoded-secret` | error | `apiKey`, `password`, `token` literals in source |
 
-Plus ESLint's built-in `no-eval` (error) for `eval()` / `new Function()`.
-
-`no-async-array-callback` is aware of the legitimate pattern — `await Promise.all(arr.map(async ...))` (direct wrap, or assign-then-consume) is **not** flagged.
-
-**Why inlined, not a dependency?** The detection logic is compact, and these four are the rules that apply across *all* TypeScript projects. Logic adapted from [`eslint-plugin-ai-guard`](https://github.com/YashJadhav21/eslint-plugin-ai-guard) (MIT, (c) YashJadhav21) — narrowed to drop SQL/auth/HTTP-handler rules that only matter for web backends. No autofixes; the rules report and the agent acts on the message.
-
-## Naming conventions
-
-| Convention | Rule |
-|---|---|
-| Filenames: `.ts`/`.js` → kebab; `.tsx`/`.jsx` → kebab in `app/`, PascalCase in `components/` | `check-file/filename-naming-convention` |
-| Variables/functions/params: `camelCase` (`_` prefix allowed) | `@typescript-eslint/naming-convention` |
-| Types/classes/interfaces/enums: `PascalCase` | `@typescript-eslint/naming-convention` |
-| Global const with a literal value: `UPPER_SNAKE_CASE` | `agentic/global-literal-const-naming` (inlined) |
-| Properties: unconstrained (HTTP headers, i18n keys, API fields) | `@typescript-eslint/naming-convention` |
-
-`global-literal-const-naming` is an inlined custom rule (in `src/rules/`); the others come from `@typescript-eslint` and `eslint-plugin-check-file`.
+Plus ESLint's `no-eval`. `no-async-array-callback` is aware of the legitimate `await Promise.all(arr.map(async ...))` pattern (direct wrap or assign-then-consume) and does **not** flag it.
 
 ## Requirements
 
@@ -136,37 +136,25 @@ Plus ESLint's built-in `no-eval` (error) for `eval()` / `new Function()`.
 | eslint | `^9.0.0 \|\| ^10.0.0` |
 | typescript | `^5.0.0` |
 
-Requires **Node.js ≥ 26** — the Temporal API ships natively only from Node 26 (older Node needs `--js-temporal` on 24, or `@js-temporal/polyfill` on ≤22). All plugins are bundled as `dependencies`, so installing this one package is enough.
+Requires **Node.js ≥ 26** — the Temporal API ships natively only from Node 26. All plugins are bundled as `dependencies`, so installing this one package is enough.
 
 ### Temporal types (TypeScript prerequisite)
 
-> TypeScript does **not** ship `Temporal` types. The Temporal rule forces `Temporal.*` usage, but `tsc` will report `Cannot find name 'Temporal'` (TS2304) until you supply the global type yourself. This is a hard prerequisite for the Temporal rule, not optional.
-
-Runtime: Node 26+ provides `Temporal` globally — no import, no polyfill. Types: install `@js-temporal/polyfill` **as a dev dependency** and bridge it to the global with one ambient declaration file (the polyfill is used for **types only** — `import type` is erased at build time, so it adds **zero runtime/bundle cost** and does not shadow the native `Temporal`):
+TypeScript does **not** ship `Temporal` types. The `temporal()` rule forces `Temporal.*` usage, but `tsc` reports `Cannot find name 'Temporal'` (TS2304) until you supply the global type. Install the polyfill as a dev dependency and bridge it to the global (types only — zero runtime cost):
 
 ```bash
 pnpm add -D @js-temporal/polyfill
 ```
 
 ```ts
-// src/types/temporal.d.ts — makes the global Temporal visible to tsc.
-// At runtime the native Node 26 Temporal is used; this only teaches TypeScript its shape.
+// src/types/temporal.d.ts
 import type { Temporal as TemporalType } from '@js-temporal/polyfill';
-
 declare global {
   const Temporal: typeof TemporalType;
 }
 ```
 
-To annotate values with Temporal types elsewhere, import the type directly:
-
-```ts
-import type { Temporal as TemporalType } from '@js-temporal/polyfill';
-
-interface Event { startTime: TemporalType.ZonedDateTime }
-```
-
-When TypeScript eventually ships native Temporal types, delete `temporal.d.ts` and drop the dev dependency — no source changes needed.
+When TypeScript ships native Temporal types, delete `temporal.d.ts` and drop the dev dependency.
 
 ## License
 
