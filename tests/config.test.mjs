@@ -76,20 +76,28 @@ test('compose: base() + selected blocks assembles a valid partial config', () =>
   assert.ok(cfg.find((b) => b.rules?.['no-restricted-properties']), 'temporal');
 });
 
-test('escapeHatches: default bans `as` (minus const) and `!`, keeps Date', () => {
+test('escapeHatches: default enables no-escape-assertion with empty allow', () => {
   const block = escapeHatches();
+  assert.deepEqual(block.rules['agentic/no-escape-assertion'], ['error', { allow: [] }]);
   const has = (sel) => block.rules['no-restricted-syntax'].some((s) => s.selector === sel);
-  assert.equal(has('TSAsExpression[typeAnnotation.typeName.name!="const"]'), true);
   assert.equal(has('TSNonNullExpression'), true);
   assert.equal(has("NewExpression[callee.name='Date']"), true);
 });
 
-test('escapeHatches: allowAsAssertions drops only the `as` selector', () => {
+test('escapeHatches: allowAsAssertions true turns the as rule off (!/Date stay)', () => {
   const block = escapeHatches({ allowAsAssertions: true });
+  assert.ok(!('agentic/no-escape-assertion' in block.rules), 'as rule absent');
   const has = (sel) => block.rules['no-restricted-syntax'].some((s) => s.selector === sel);
-  assert.equal(has('TSAsExpression[typeAnnotation.typeName.name!="const"]'), false);
   assert.equal(has('TSNonNullExpression'), true);
   assert.equal(has("NewExpression[callee.name='Date']"), true);
+});
+
+test('escapeHatches: allowAsAssertions [...] threads patterns into allow', () => {
+  const block = escapeHatches({ allowAsAssertions: ['JSON.parse', 'Response.json'] });
+  assert.deepEqual(block.rules['agentic/no-escape-assertion'], [
+    'error',
+    { allow: ['JSON.parse', 'Response.json'] },
+  ]);
 });
 
 test('temporal() defaults to source + tests + scripts', () => {

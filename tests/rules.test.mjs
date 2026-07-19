@@ -11,6 +11,7 @@ import noAsyncArrayCallback from '../rules/no-async-array-callback.mjs';
 import noBroadException from '../rules/no-broad-exception.mjs';
 import noHardcodedSecret from '../rules/no-hardcoded-secret.mjs';
 import globalLiteralConstNaming from '../rules/global-literal-const-naming.mjs';
+import noEscapeAssertion from '../rules/no-escape-assertion.mjs';
 
 const ruleTester = new RuleTester({
   languageOptions: {
@@ -88,6 +89,38 @@ test('global-literal-const-naming', () => {
       { code: 'const retryCount = 5;', errors: [{ messageId: 'upperSnake' }] },
       { code: 'export const retryCount = 5;', errors: [{ messageId: 'upperSnake' }] }, // exported too
       { code: 'const name = "agent";', errors: [{ messageId: 'upperSnake' }] },
+    ],
+  });
+});
+
+test('no-escape-assertion', () => {
+  ruleTester.run('no-escape-assertion', noEscapeAssertion, {
+    valid: [
+      'const x = { a: 1 } as const;', // as const — always allowed
+      'maybe!;', // non-null assertion is a different rule
+      'const x = foo;', // no `as` at all
+      { code: 'const d = JSON.parse(raw) as T;', options: [{ allow: ['JSON.parse'] }] },
+      { code: 'const r = (await res.json()) as R;', options: [{ allow: ['res.json'] }] },
+    ],
+    invalid: [
+      { code: 'const x = foo as string;', errors: [{ messageId: 'escapeAssertion' }] }, // no allow
+      {
+        // allow set, but foo isn't in it
+        code: 'const x = foo as string;',
+        options: [{ allow: ['JSON.parse'] }],
+        errors: [{ messageId: 'escapeAssertion' }],
+      },
+      {
+        // JSON.parse not allowlisted here
+        code: 'const d = JSON.parse(raw) as T;',
+        errors: [{ messageId: 'escapeAssertion' }],
+      },
+      {
+        // allow has Response.json, not JSON.parse
+        code: 'const d = JSON.parse(raw) as T;',
+        options: [{ allow: ['Response.json'] }],
+        errors: [{ messageId: 'escapeAssertion' }],
+      },
     ],
   });
 });

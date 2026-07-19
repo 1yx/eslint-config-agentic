@@ -56,7 +56,7 @@ export default [
 | `agentGuardrails()` | empty catch, async array callbacks, broad exceptions, secrets, `eval` | all code |
 | `qualityLimits()` | ≤50 lines/function, ≤500 lines/file, ≤4 depth, ≤3 params, complexity ≤10 | all code |
 | `temporal()` | ban `Date.*` — Temporal only | source + tests + scripts |
-| `escapeHatches()` | ban `as` (except `as const`) and `!` | source |
+| `escapeHatches()` | ban `as` (except `as const`; boundary call patterns allowlistable via `allowAsAssertions`) and `!` | source |
 | `jsdoc()` | require JSDoc on declarations | source |
 | `scriptsRelax()` | turn off limits + JSDoc for scripts | scripts |
 | `eslintConfigExclude()` | exclude `eslint.config.*` from type-aware | config file |
@@ -75,7 +75,7 @@ export default [
 | `scriptFiles` | `scripts/` + `src/scripts/` | Script globs for `scriptsRelax` + `temporal`. |
 | `filenameConventions` | `{}` | Extra `glob → convention` entries merged into `checkFile` defaults (your keys win). |
 | `maxLinesPerFunction` | `{}` | Per-glob overrides for `max-lines-per-function`: `{ glob: false \| number }`. `false` disables; a number caps. |
-| `allowAsAssertions` | `false` | Permit `as` at framework type boundaries. `as const` always allowed; `!` always banned. |
+| `allowAsAssertions` | `false` | `false` bans all `as` (except `as const`). `true` permits all. A string array (e.g. `['JSON.parse', 'Response.json']`) permits `as` only on those left-hand call patterns — recommended for framework boundaries. `!` always banned. |
 
 ```js
 export default agentic({
@@ -108,13 +108,20 @@ In source, the config bans TypeScript escape hatches because AI reaches for them
 - **`!` (non-null assertion)** — always banned. Almost always a real null-handling bug.
 - **`as` (type assertion)** — banned **except `as const`**. `as const` only narrows, never widens.
 
-Some frameworks genuinely need `as` at their type boundary (`JSON.parse`, `Response.json`, drizzle `.set()`/`sql` return `unknown`). Opt in once:
+Some frameworks genuinely need `as` at their type boundary (`JSON.parse`, `Response.json`, drizzle `.set()`/`sql` return `unknown`). `allowAsAssertions` has three forms:
 
-```js
-export default agentic({ allowAsAssertions: true });
-```
+- **`false`** (default) — ban all `as` (except `as const`). For an occasional boundary, prefer a line-level disable over weakening the rule:
+  ```ts
+  // eslint-disable-next-line no-restricted-syntax
+  const d = JSON.parse(raw) as MyShape;
+  ```
+- **`['JSON.parse', 'Response.json', …]`** — permit `as` only when the left-hand side is one of these call patterns. **Recommended** when a project has several framework boundaries; the rest of `as` stays banned.
+  ```js
+  export default agentic({ allowAsAssertions: ['JSON.parse', 'Response.json'] });
+  ```
+- **`true`** — permit all `as`. Only for projects that use `as` pervasively (heavy drizzle/fetch); effectively gives up the rule.
 
-Or per-block: `escapeHatches({ allowAsAssertions: true })`.
+`!` is always banned regardless.
 
 ## Inlined agent guardrails
 
