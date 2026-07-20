@@ -3,8 +3,10 @@
 //   pnpm test    # or: node --test tests/
 
 import test from 'node:test';
-import { RuleTester } from 'eslint';
+import assert from 'node:assert/strict';
+import { RuleTester, ESLint } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
+import { fileURLToPath } from 'node:url';
 
 import noEmptyCatch from '../rules/no-empty-catch.mjs';
 import noAsyncArrayCallback from '../rules/no-async-array-callback.mjs';
@@ -63,6 +65,18 @@ test('no-broad-exception', () => {
       { code: 'try { f() } catch (e: unknown) { console.log(e); }', errors: [{ messageId: 'broadException', data: { type: 'unknown' } }] },
     ],
   });
+});
+
+test('no-broad-exception (type-aware): custom type guards narrow, plain booleans do not', async () => {
+  // RuleTester's virtual file (estree.ts) is rejected by tsconfig include checks, so we
+  // drive the ESLint class over real fixture files under tests/fixtures/ instead.
+  const fixturesDir = fileURLToPath(new URL('./fixtures/', import.meta.url));
+  const eslint = new ESLint({ cwd: fixturesDir });
+  const results = await eslint.lintFiles(['guard.ts', 'plain.ts']);
+  const file = (name) => results.find((r) => r.filePath.endsWith(name));
+  const hits = (r) => r.messages.filter((m) => m.ruleId === 'agentic/no-broad-exception');
+  assert.equal(hits(file('guard.ts')).length, 0, 'custom type guard (`e is T`) narrows → not flagged');
+  assert.equal(hits(file('plain.ts')).length, 1, 'plain boolean fn is NOT a type guard → still flagged');
 });
 
 test('no-hardcoded-secret', () => {

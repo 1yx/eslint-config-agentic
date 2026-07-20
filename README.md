@@ -145,7 +145,7 @@ Some frameworks genuinely need `as` at their type boundary (`JSON.parse`, `Respo
 | `agentic/no-empty-catch` | error | `catch (e) {}` — silently swallows errors |
 | `agentic/no-swallowed-errors` | warn | `catch (e) { console.log(e) }` — logs but continues as if nothing failed |
 | `agentic/no-async-array-callback` | warn | `array.map(async ...)` — returns `Promise[]`, not values |
-| `agentic/no-broad-exception` | warn | `catch (e: any)` / un-narrowed `catch (e: unknown)` |
+| `agentic/no-broad-exception` | warn | `catch (e: any)` / un-narrowed `catch (e: unknown)`; recognizes `instanceof` and custom type guards (`e is T`) |
 | `agentic/no-hardcoded-secret` | error | `apiKey`, `password`, `token` literals in source |
 | `agentic/no-weak-randomness-for-secrets` | error | `Math.random()` for tokens/keys (not a CSPRNG) |
 | `agentic/no-redundant-logic` | warn | `x === true`, `x ? true : false` |
