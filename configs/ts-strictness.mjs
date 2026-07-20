@@ -25,18 +25,6 @@ export default function tsStrictness({ files } = {}) {
       '@typescript-eslint/no-unsafe-return': 'warn',
       // AI throws strings/numbers instead of Error — loses stack trace and catch typing.
       '@typescript-eslint/only-throw-error': 'error',
-      // AI sprinkles bare numeric literals; warn with an allowlist for trivial values.
-      '@typescript-eslint/no-magic-numbers': [
-        'warn',
-        {
-          ignore: [0, 1, -1],
-          ignoreArrayIndexes: true,
-          ignoreEnums: true,
-          ignoreNumericLiteralTypes: true,
-          ignoreReadonlyClassProperties: true,
-          ignoreTypeIndexes: true,
-        },
-      ],
     },
   };
 }

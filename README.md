@@ -50,7 +50,7 @@ export default [
 | `coreStyle()` | `no-var`, `prefer-const`, `eqeqeq`, `curly`, templates, unreachable | all code |
 | `naming()` | `naming-convention` + global-literal-const UPPER_SNAKE | all code |
 | `checkFile()` | filename naming (kebab for `src`/`test`/`tests`/`scripts`) | all code |
-| `tsStrictness()` | type-only imports, `type` over `interface`, `no-explicit-any`, `unsafe-*`, `only-throw-error`, `no-magic-numbers` (allowlisted), `prefer-nullish-coalescing` | all code |
+| `tsStrictness()` | type-only imports, `type` over `interface`, `no-explicit-any`, `unsafe-*`, `only-throw-error`, `prefer-nullish-coalescing` | all code |
 | `tsdoc()` | `tsdoc/syntax` | all code |
 | `promiseSafety()` | floating/misused promises, await-thenable, no async promise executor | all code |
 | `agentGuardrails()` | empty/swallowed catch, async array callbacks, broad exceptions, secrets, weak randomness, redundant logic, LLM artifacts, `eval` | all code |

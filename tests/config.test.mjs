@@ -76,14 +76,10 @@ test('compose: base() + selected blocks assembles a valid partial config', () =>
   assert.ok(cfg.find((b) => b.rules?.['no-restricted-properties']), 'temporal');
 });
 
-test('tsStrictness enables only-throw-error and no-magic-numbers', () => {
+test('tsStrictness enables only-throw-error and prefer-nullish-coalescing', () => {
   const cfg = agentic();
   const ts = cfg.find((b) => b.rules?.['@typescript-eslint/no-explicit-any'] === 'warn');
   assert.equal(ts.rules['@typescript-eslint/only-throw-error'], 'error', 'throws non-Error banned');
-  assert.ok(
-    Array.isArray(ts.rules['@typescript-eslint/no-magic-numbers']),
-    'magic-numbers configured with allowlist',
-  );
   assert.equal(ts.rules['@typescript-eslint/prefer-nullish-coalescing'], 'warn', 'nullish coalescing preferred');
 });
 
