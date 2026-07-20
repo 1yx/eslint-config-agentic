@@ -163,3 +163,25 @@ test('agentic({ scriptFiles }): threads to scriptsRelax', () => {
   const relax = cfg.find((b) => b.rules?.['max-lines'] === 'off');
   assert.deepEqual(relax.files, ['**/tools/**/*.{ts}']);
 });
+
+test('every plugin-prefixed rule id in agentic() resolves in its plugin', () => {
+  // Regression guard: catches rules whose upstream export was removed (e.g.
+  // @typescript-eslint/no-async-promise-executor, dropped in v8). Core (un-prefixed)
+  // rules are skipped — a typo there surfaces as "unknown rule" at lint time.
+  const cfg = agentic();
+  const plugins = new Map();
+  for (const block of cfg) {
+    if (block.plugins) for (const [name, p] of Object.entries(block.plugins)) plugins.set(name, p);
+  }
+  for (const block of cfg) {
+    if (!block.rules) continue;
+    for (const id of Object.keys(block.rules)) {
+      if (!id.includes('/')) continue;
+      const [pluginName, ...rest] = id.split('/');
+      const ruleName = rest.join('/');
+      const plugin = plugins.get(pluginName);
+      assert.ok(plugin, `plugin "${pluginName}" not registered (rule "${id}")`);
+      assert.ok(plugin.rules?.[ruleName], `rule "${id}" not found in plugin "${pluginName}"`);
+    }
+  }
+});

@@ -101,6 +101,19 @@ This config does **not** bundle framework parsers/plugins — add the one you ne
 - **Framework-boundary rules extend automatically** when you add the glob to `files`, `sourceFiles`, `maxLinesPerFunction`, or `filenameConventions` — those blocks match whatever glob you give them.
 - **Core TS/style rules also cover framework files** once they're in `files` (since 0.2.0 — `base()` registers the `@typescript-eslint` plugin globally, and rule blocks match your `files` glob). For rules specific to the framework (e.g. Vue template rules), add the plugin's recommended config.
 
+## Nested repos & dot-directories
+
+ESLint's `**` glob does not traverse dot-directories. If your repo contains a nested checkout ESLint shouldn't lint — a git worktree (`.worktree/`), a vendored copy, a sibling repo — add it to `ignores`. Otherwise ESLint may walk those files while the plugin-registering block's `files` glob doesn't match them, surfacing as `plugin not found` errors:
+
+```js
+import agentic from 'eslint-config-agentic';
+
+export default [
+  ...agentic(),
+  { ignores: ['.worktree/**'] },
+];
+```
+
 ## Escape hatches & framework boundaries
 
 In source, the config bans TypeScript escape hatches because AI reaches for them to silence type errors:
